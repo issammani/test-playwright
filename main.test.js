@@ -32,25 +32,18 @@ test("Fill and submit credit card form", async ({ page }) => {
     "cc-type": "visa",
   };
 
-  console.log("hehehehehehe 2");
-
   await page.focus('input[autocomplete="cc-name"]');
   await page.fill('input[autocomplete="cc-name"]', creditCard["cc-name"]);
-  console.log("hehehehehehe 3");
 
   await page.focus('input[autocomplete="cc-number"]');
   await page.fill('input[autocomplete="cc-number"]', creditCard["cc-number"]);
-  console.log("hehehehehehe 4");
 
   await page.focus('input[autocomplete="cc-exp"]');
   await page.fill('input[autocomplete="cc-exp"]', creditCard["cc-exp"]);
-  console.log("hehehehehehe 5");
 
   await page.click('input[type="submit"]');
-  console.log("hehehehehehe 6");
 
   const interceptedData = await interceptorPromise;
-  console.log("hehehehehehe 7");
 
   expect(interceptedData).not.toBeNull();
   expect(interceptedData.name).toBe("creditCardMessageHandler");

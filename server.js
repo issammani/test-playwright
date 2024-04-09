@@ -2,39 +2,39 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
-let server;
+const PORT = 5678; // Probably should get from CI environment
+const assetsDir = path.join(__dirname, "assets");
 
-let cachedHtmlContent = null;
-fs.readFile(path.join(__dirname, "index.html"), (err, content) => {
-  if (err) throw err;
-  cachedHtmlContent = content;
-  // Start the server after caching the content
-  startServer();
-});
-
-function startServer() {
-  server = http.createServer((req, res) => {
-    if (cachedHtmlContent) {
-      res.writeHead(200, { "Content-Type": "text/html" });
-      res.end(cachedHtmlContent);
-    } else {
-      res.writeHead(500, { "Content-Type": "text/plain" });
-      res.end("Internal Server Error");
+function serveFile(res, filePath, contentType) {
+  fs.readFile(filePath, (err, content) => {
+    if (err) {
+      res.writeHead(404, { "Content-Type": "text/plain" });
+      return res.end("Not Found");
     }
+    res.writeHead(200, { "Content-Type": contentType });
+    res.end(content);
   });
-
-  const PORT = 8000;
-
-  server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 }
 
+const server = http.createServer((req, res) => {
+  const typeMap = {
+    ".html": "text/html",
+    ".css": "text/css",
+    ".js": "application/javascript",
+    default: "text/plain",
+  };
+  const requestedPath = req.url === "/" ? "/index.html" : req.url;
+  const filePath = path.join(assetsDir, requestedPath);
+  const ext = path.extname(filePath).toLowerCase();
+  const contentType = typeMap[ext] || typeMap["default"];
+  serveFile(res, filePath, contentType);
+});
+
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
 process.on("SIGTERM", () => {
-  if (server) {
-    server.close(() => {
-      console.log("Server closed gracefully");
-      process.exit(0);
-    });
-  } else {
+  server.close(() => {
+    console.log("Server closed gracefully");
     process.exit(0);
-  }
+  });
 });
